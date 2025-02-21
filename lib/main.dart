@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'constants.dart';
 import 'util.dart';
 import 'theme.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -34,7 +35,6 @@ class MyApp extends StatelessWidget {
 
 class DaysPage extends StatefulWidget {
   const DaysPage({super.key});
-
   @override
   State<DaysPage> createState() => _DaysPageState();
 }
@@ -108,6 +108,66 @@ class _DaysPageState extends State<DaysPage> {
                       ),
                     ),
                   ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(defaultBorder),
+            margin: EdgeInsets.symmetric(horizontal: 0, vertical: defaultBorder/2),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(defaultBorder),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Date",
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(
+                        "Weather Desc",
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color:
+                          Theme.of(context).colorScheme.onSecondaryContainer,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'M',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    Text(
+                      'N',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 4),
+                Container(
+                  width: 1,
+                  height: 40,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  width: defaultIconSize,
+                  height: defaultIconSize,
+                  child: Icon(
+                    Icons.wb_cloudy_outlined,
+                    size: 40,
+                    color: Colors.amber,
+                  ),
                 ),
               ],
             ),

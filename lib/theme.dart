@@ -344,10 +344,9 @@ class MaterialTheme {
       bodyColor: colorScheme.onSurface,
       displayColor: colorScheme.onSurface,
     ),
-    scaffoldBackgroundColor: colorScheme.background,
+    scaffoldBackgroundColor: colorScheme.surface,
     canvasColor: colorScheme.surface,
   );
-
 
   List<ExtendedColor> get extendedColors => [
   ];
