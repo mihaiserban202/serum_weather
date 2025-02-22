@@ -22,12 +22,17 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: brightness == Brightness.light ? theme.light() : theme.dark(),
-      home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          title: Text("Location"),
-        ),
-        body: DaysPage(),
+      home: Builder(
+        builder: (context) {
+          return Scaffold(
+            backgroundColor: Theme.of(context).colorScheme.primaryFixed,
+            appBar: AppBar(
+              backgroundColor: Theme.of(context).colorScheme.primaryFixedDim,
+              title: Text("Location"),
+            ),
+            body: DaysPage(),
+          );
+        },
       ),
     );
   }
@@ -44,92 +49,152 @@ class _DaysPageState extends State<DaysPage> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Theme.of(context).colorScheme.surface,
+      color: Colors.transparent,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          hoursContainer(),
-          hoursContainer(),
-          hoursContainer(),
-          hoursContainer(),
+          // CREATE IMAGE HERE
         ],
       ),
     );
   }
 }
 
-class hoursContainer extends StatelessWidget {
-  const hoursContainer({super.key});
+class StatsDataContainer extends StatelessWidget {
+  const StatsDataContainer({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(defaultBorder),
+      padding: EdgeInsets.all(defaultPadding),
       margin: EdgeInsets.symmetric(
-        horizontal: 0,
-        vertical: defaultBorder / 2,
+        horizontal: defaultPadding / 4,
+        vertical: defaultPadding / 2,
       ),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
+        color: Theme.of(context).colorScheme.primaryFixedDim,
         borderRadius: BorderRadius.circular(defaultBorder),
       ),
       child: IntrinsicHeight(
         child: Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          // Ensures full heightRow(
           children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: [// DATA INSERTION
                   Text(
-                    "Date",
-                    style: Theme.of(context).textTheme.titleMedium,
+                    "Time/Date",
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimaryFixed,
+                    ),
                   ),
                   Text(
                     "Weather Desc",
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelLarge?.copyWith(
-                      color:
-                      Theme.of(
-                        context,
-                      ).colorScheme.onSecondaryContainer,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimaryFixed,
                     ),
                   ),
                 ],
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text('M', style: Theme.of(context).textTheme.bodyLarge),
-                Text('N', style: Theme.of(context).textTheme.bodyLarge),
-              ],
-            ),
-            SizedBox(width: 4),
-            VerticalDivider(
-              width: 20,
-              // total space taken by the divider
-              thickness: 2,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-              indent: 0,
-              endIndent: 0,
-            ),
-            SizedBox(width: 8),
-            Container(
-              width: defaultIconSize,
-              height: defaultIconSize,
-              child: Icon(
-                Icons.wb_cloudy_outlined,
-                size: 40,
-                color: Colors.amber,
-              ),
-            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+
+
+class HoursDataContainer extends StatelessWidget {
+  const HoursDataContainer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Container(
+          padding: EdgeInsets.all(defaultPadding),
+          margin: EdgeInsets.symmetric(
+            horizontal: 0,
+            vertical: defaultPadding / 2,
+          ),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryFixedDim,
+            borderRadius: BorderRadius.circular(defaultBorder),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [// DATA INSERTION
+                      Text(
+                        "Time/Date",
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onPrimaryFixed,
+                        ),
+                      ),
+                      Text(
+                        "Weather Desc",
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onPrimaryFixed,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [// DATA INSERTION
+                    Text('10*', style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimaryFixed,
+                    )),
+                    Text('-10*', style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimaryFixed,
+                    )),
+                  ],
+                ),
+                SizedBox(width: 4),
+                VerticalDivider(
+                  width: defaultDivider,
+                  thickness: 1,
+                  color: Theme.of(context).colorScheme.onPrimaryFixed,
+                  indent: 8,
+                  endIndent: 8,
+                ),
+                SizedBox(width: defaultDivider),
+                SizedBox( // DATA INSERTION
+                  width: defaultIconSize,
+                  height: defaultIconSize,
+                  child: Icon(
+                    Icons.wb_cloudy_rounded,
+                    size: 40,
+                    color: Theme.of(context).colorScheme.errorContainer,
+                  ),
+                ),
+                SizedBox(width: defaultDivider * 4),
+              ],
+            ),
+          ),
+        ),
+        // Positioned dropdown icon
+        Positioned(// DATA INSERTION
+          top: 4,
+          right: 4,
+          child: IconButton(
+            icon: Icon(Icons.arrow_drop_down_circle, color: Theme.of(context).colorScheme.onPrimary),
+            iconSize: 18,
+            onPressed: () {
+            },
+          ),
+        ),
+      ],
     );
   }
 }
