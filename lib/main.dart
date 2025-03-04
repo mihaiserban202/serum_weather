@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'constants.dart';
 import 'util.dart';
 import 'theme.dart';
+import 'dart:math';
 
 void main() {
   runApp(MyApp());
@@ -114,18 +115,43 @@ class DayForecast extends StatelessWidget {
     super.key,
     this.icon = Icons.calendar_today,
     this.title = "Day forecast",
-    this.timeData = const [], // Default empty list
+    this.timeData = const [],
   });
 
   @override
   Widget build(BuildContext context) {
+    // Use provided data or fallback to default data for 7 days.
+    final data = timeData.isNotEmpty ? timeData : _defaultData();
+
+    // Extract temperatures and compute min/max.
+    final temps = data.map((d) => d['temp'] as double).toList();
+    final minTemp = temps.reduce(min);
+    final maxTemp = temps.reduce(max);
+
+    // Expand min/max by dividing by 0.8.
+    final minY = minTemp / 0.8;
+    final maxY = maxTemp / 0.8;
+    final midY = (minY + maxY) / 2;
+
+    // Day labels from data.
+    final dayLabels = data.map((d) => d['day'] as String).toList();
+
+    // Build the chart points.
+    final spots = <FlSpot>[];
+    for (int i = 0; i < data.length; i++) {
+      final double temp = data[i]['temp'] as double;
+      spots.add(FlSpot(i.toDouble(), temp));
+    }
+
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
-      width: MediaQuery.of(context).size.width / 2 - defaultPadding * 1.5,
-      padding: EdgeInsets.all(defaultPadding),
-      margin: EdgeInsets.symmetric(horizontal: defaultMargin, vertical: defaultMargin / 2),
+      width: MediaQuery.of(context).size.width / 2.3,
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryFixedDim,
-        borderRadius: BorderRadius.circular(defaultBorder),
+        color: colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,11 +159,15 @@ class DayForecast extends StatelessWidget {
           // Title Row (Icon + Text)
           Row(
             children: [
-              Icon(icon, size: 24, color: Colors.black87),
+              Icon(icon, size: 24, color: colorScheme.onPrimaryContainer),
               const SizedBox(width: 8),
               Text(
                 title,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onPrimaryContainer,
+                ),
               ),
             ],
           ),
@@ -148,67 +178,148 @@ class DayForecast extends StatelessWidget {
             height: 150,
             child: LineChart(
               LineChartData(
-                backgroundColor: Colors.transparent,
                 minX: 0,
-                lineTouchData: LineTouchData(
-                    touchTooltipData: LineTouchTooltipData(showOnTopOfTheChartBoxArea: false),
-                  ),
-                maxX: 6, // 7 days (Mon-Sun)
-                minY: -10,
-                maxY: 10,
-                gridData: FlGridData(show: false),
+                maxX: data.length - 1,
+                minY: minY,
+                maxY: maxY,
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: 3,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: Colors.grey.withOpacity(0.5),
+                      strokeWidth: 2,
+                    );
+                  },
+                ),
+                borderData: FlBorderData(show: false),
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: true, reservedSize: 32),
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (value, meta) {
+                        const epsilon = 0.001;
+                        if ((value - minY).abs() < epsilon ||
+                            (value - midY).abs() < epsilon ||
+                            (value - maxY).abs() < epsilon) {
+                          return Text(
+                            "${value.toStringAsFixed(0)}°",
+                            style: TextStyle(
+                              color: colorScheme.onPrimaryContainer,
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
                   ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      getTitlesWidget: (value, _) {
-                        List<String> days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-                        return Text(days[value.toInt()]);
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (index >= 0 && index < dayLabels.length) {
+                          return Text(
+                            dayLabels[index],
+                            style: TextStyle(
+                              color: colorScheme.onPrimaryContainer,
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
                       },
                     ),
                   ),
                   topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
-                borderData: FlBorderData(show: false),
+                // Configure touch interactions.
+                lineTouchData: LineTouchData(
+                  enabled: true,
+                  handleBuiltInTouches: true,
+                  touchTooltipData: LineTouchTooltipData(
+                    tooltipRoundedRadius: 8,
+                    tooltipPadding: const EdgeInsets.all(8),
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((touchedSpot) {
+                        return LineTooltipItem(
+                          "${touchedSpot.y.toStringAsFixed(1)}°",
+                          TextStyle(
+                            color: colorScheme.primaryContainer,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
+                  getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
+                    return spotIndexes.map((index) {
+                      return TouchedSpotIndicatorData(
+                        // Vertical dashed line indicator.
+                        FlLine(
+                          color: colorScheme.onPrimaryFixed,
+                          strokeWidth: 1,
+                          dashArray: [5, 5],
+                        ),
+                        // Dot indicator at the touched spot.
+                        FlDotData(
+                          show: true,
+                          getDotPainter: (spot, percent, barData, index) {
+                            return FlDotCirclePainter(
+                              radius: 4,
+                              color: colorScheme.onPrimaryFixed,
+                              strokeWidth: 2,
+                              strokeColor: colorScheme.primaryContainer,
+                            );
+                          },
+                        ),
+                      );
+                    }).toList();
+                  },
+                ),
                 lineBarsData: [
                   LineChartBarData(
+                    spots: spots,
                     isCurved: true,
-                    color: Colors.black,
-                    dotData: FlDotData(show: true),
+                    color: colorScheme.onPrimaryFixed,
+                    // Remove default dots.
+                    dotData: FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
                       gradient: LinearGradient(
-                        colors: [Colors.black, Colors.transparent],
-                        stops: [0, 1],
+                        colors: [
+                          colorScheme.onPrimaryFixed.withOpacity(0.4),
+                          Colors.transparent,
+                        ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                      )
+                      ),
                     ),
-                    spots: [
-                      FlSpot(0, -5), // Monday
-                      FlSpot(1, -2), // Tuesday
-                      FlSpot(2, 0),  // Wednesday
-                      FlSpot(3, 3),  // Thursday (selected)
-                      FlSpot(4, 2),  // Friday
-                      FlSpot(5, 0),  // Saturday
-                      FlSpot(6, 1),  // Sunday
-                    ],
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 12),
         ],
       ),
     );
   }
-}
 
+  /// Default data for 7 days (including "today").
+  List<Map<String, dynamic>> _defaultData() {
+    return [
+      {'day': 'Mon', 'temp': -5.0},
+      {'day': 'Tue', 'temp': -2.0},
+      {'day': 'Wed', 'temp': 0.0},
+      {'day': 'Thu', 'temp': 3.0},
+      {'day': 'Fri', 'temp': 2.0},
+      {'day': 'Sat', 'temp': 0.0},
+      {'day': 'Sun', 'temp': 1.0},
+    ];
+  }
+}
 /*
 Forecast(
   title: "Temperature",
@@ -474,7 +585,7 @@ class HoursDataContainer extends StatelessWidget {
                   child: Icon(
                     Icons.wb_cloudy_rounded,
                     size: 40,
-                    color: Theme.of(context).colorScheme.errorContainer,
+                    color: Theme.of(context).colorScheme.onErrorContainer,
                   ),
                 ),
                 SizedBox(width: defaultDivider * 4),
